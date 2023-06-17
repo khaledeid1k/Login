@@ -16,7 +16,7 @@ import '../shared/cubit/states.dart';
 
 class Home extends StatelessWidget {
   List<Widget> screens = [Tasks(), Done(), Archived()];
-  List<String> listTextAppBar = ["Tasks", "Done", "Archived"];
+  List<String> listTextAppBar = [tasks, done,archive];
   List<Map<String, Object?>> allDataBase = [];
   var logger = Logger();
   var scaffoldKey = GlobalKey<ScaffoldState>();
@@ -48,10 +48,10 @@ class Home extends StatelessWidget {
                 baseCubit.changeCurrentIndex(value);
               },
               items: const [
-                BottomNavigationBarItem(icon: Icon(Icons.menu), label: "Tasks"),
-                BottomNavigationBarItem(icon: Icon(Icons.done), label: "Done"),
+                BottomNavigationBarItem(icon: Icon(Icons.menu), label: tasks),
+                BottomNavigationBarItem(icon: Icon(Icons.done), label: done),
                 BottomNavigationBarItem(
-                    icon: Icon(Icons.archive), label: "Archived"),
+                    icon: Icon(Icons.archive), label: archive),
               ],
             ),
             floatingActionButton: FloatingActionButton(
@@ -59,9 +59,9 @@ class Home extends StatelessWidget {
                 if (baseCubit.isBottomSheetShow) {
                   if (formKey.currentState?.validate() == true) {
                     baseCubit.insertTask(
-                            title: taskText.text,
-                            date: dateText.text,
-                            time: timeText.text);
+                            subTitle: taskText.text,
+                            subDate: dateText.text,
+                            subTime: timeText.text);
                     Navigator.of(context).pop();
                     baseCubit.changeBottomSheetIconState(const Icon(Icons.edit),false);
                   }
@@ -82,13 +82,11 @@ class Home extends StatelessWidget {
                                   defaultFormField(
                                       controller: taskText,
                                       prefixIcon: Icon(Icons.menu),
-                                      labelText: "Task",
+                                      labelText: task,
                                       keyboardType: TextInputType.text,
                                       validator: (v) {
-                                        if (v?.isEmpty == true) {
-                                          return "Task shouldn't be empty ";
-                                        }
-                                        return null;
+                                        return  checkEmpty(v!,task);
+
                                       }),
                                   const SizedBox(
                                     height: 10,
@@ -96,13 +94,10 @@ class Home extends StatelessWidget {
                                   defaultFormField(
                                     controller: timeText,
                                     prefixIcon: Icon(Icons.timelapse),
-                                    labelText: "Time",
+                                    labelText: time,
                                     keyboardType: TextInputType.datetime,
                                     validator: (v) {
-                                      if (v?.isEmpty == true) {
-                                        return "Time shouldn't be empty ";
-                                      }
-                                      return null;
+                                      return  checkEmpty(v!,time);
                                     },
                                     onTap: () {
                                       showTimePicker(
@@ -119,13 +114,10 @@ class Home extends StatelessWidget {
                                   defaultFormField(
                                     controller: dateText,
                                     prefixIcon: const Icon(Icons.date_range),
-                                    labelText: "Date",
+                                    labelText: date,
                                     keyboardType: TextInputType.datetime,
                                     validator: (v) {
-                                      if (v?.isEmpty == true) {
-                                        return "Date shouldn't be empty ";
-                                      }
-                                      return null;
+                                    return  checkEmpty(v!,date);
                                     },
                                     onTap: () {
                                       showDatePicker(
@@ -133,7 +125,7 @@ class Home extends StatelessWidget {
                                               initialDate: DateTime.now(),
                                               firstDate: DateTime.now(),
                                               lastDate:
-                                                  DateTime.parse("2023-10-03"))
+                                                  DateTime.parse(lastDate))
                                           .then((value) {
                                         dateText.text = DateFormat.yMMMd()
                                             .format(value!)
@@ -156,9 +148,7 @@ class Home extends StatelessWidget {
               },
               child: baseCubit.iconOfFloating,
             ),
-            body: baseCubit.tasksList.isEmpty
-                ? const Center(child: CircularProgressIndicator())
-                : screens[baseCubit.currentIndex],
+            body: screens[baseCubit.currentIndex],
           );
         },
         listener: (context, state) {},

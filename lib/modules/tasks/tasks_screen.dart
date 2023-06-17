@@ -11,20 +11,11 @@ class Tasks extends StatelessWidget {
 
     return BlocConsumer<BaseCubit,BaseStates>(
       listener: (context,state){},
-      builder: (context,state){return ListView.separated(
-          itemBuilder: (context,index)=>defaultItemTasks(
-              map: baseCubit.tasksList[index]
-          ),
-          separatorBuilder:  (context,index)=> Padding(
-            padding: const EdgeInsetsDirectional.only(
-                start: 20.0
-            ),
-            child: Container(
-              height: 2.0,
-              color: Colors.grey[200],
-              width: double.infinity,),
-          )
-          , itemCount: baseCubit.tasksList.length );},
+      builder: (context,state){
+
+        return defaultTasksBuilder(inputList: baseCubit.newTasksList,icon:Icons.menu );
+
+          },
     );
 
   }
