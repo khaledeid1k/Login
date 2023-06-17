@@ -18,26 +18,19 @@ class Home extends StatelessWidget {
   List<Widget> screens = [Tasks(), Done(), Archived()];
   List<String> listTextAppBar = ["Tasks", "Done", "Archived"];
   List<Map<String, Object?>> allDataBase = [];
-  late Database database;
   var logger = Logger();
   var scaffoldKey = GlobalKey<ScaffoldState>();
   var formKey = GlobalKey<FormState>();
-  Icon iconOfFloating = const Icon(Icons.edit);
-  bool isBottomSheetShow = false;
   var taskText = TextEditingController();
   var timeText = TextEditingController();
   var dateText = TextEditingController();
 
-  @override
-  void initState() {
-    // super.initState();
-    createDataBase();
-  }
+
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (BuildContext context) => BaseCubit(),
+      create: (BuildContext context) => BaseCubit()..createDataBase(),
       child: BlocConsumer<BaseCubit, BaseStates>(
         builder: (BuildContext context, BaseStates state) {
           var baseCubit = BaseCubit.getInstance(context);
@@ -63,23 +56,14 @@ class Home extends StatelessWidget {
             ),
             floatingActionButton: FloatingActionButton(
               onPressed: () {
-                if (isBottomSheetShow) {
+                if (baseCubit.isBottomSheetShow) {
                   if (formKey.currentState?.validate() == true) {
-                    insertTask(
+                    baseCubit.insertTask(
                             title: taskText.text,
                             date: dateText.text,
-                            time: timeText.text)
-                        .then((value) {
-                      getDataFromDataBase(database).then((value) {
-                        logger.d(value.toString());
-                        Navigator.of(context).pop();
-                        isBottomSheetShow = false;
-                        // setState(() {
-                        tasksList = value;
-                        iconOfFloating = const Icon(Icons.edit);
-                        // });
-                      });
-                    });
+                            time: timeText.text);
+                    Navigator.of(context).pop();
+                    baseCubit.changeBottomSheetIconState(const Icon(Icons.edit),false);
                   }
                 } else {
                   scaffoldKey.currentState
@@ -165,21 +149,14 @@ class Home extends StatelessWidget {
                       }, elevation: 15.0)
                       .closed
                       .then((value) {
-                        isBottomSheetShow = false;
-                        // setState(() {
-                        iconOfFloating = const Icon(Icons.edit);
-                        // });
+                        baseCubit.changeBottomSheetIconState(const Icon(Icons.edit),false);
                       });
-
-                  isBottomSheetShow = true;
-                  // setState(() {
-                  iconOfFloating = const Icon(Icons.add);
-                  // });
+                  baseCubit.changeBottomSheetIconState(const Icon(Icons.add),true);
                 }
               },
-              child: iconOfFloating,
+              child: baseCubit.iconOfFloating,
             ),
-            body: tasksList.isEmpty
+            body: baseCubit.tasksList.isEmpty
                 ? const Center(child: CircularProgressIndicator())
                 : screens[baseCubit.currentIndex],
           );
@@ -189,46 +166,8 @@ class Home extends StatelessWidget {
     );
   }
 
-  void createDataBase() async {
-    database = await openDatabase(("todo.dp"), version: 9,
-        onCreate: (Database db, int version) {
-      db
-          .execute(
-              'CREATE TABLE loll(id INTEGER PRIMARY KEY, title TEXT, date TEXT, time TEXT, status TEXT)')
-          .then((value) {
-        logger.d("Done Create");
-      }).catchError((onError) {
-        logger.e(onError.toString());
-      });
-    }, onOpen: (database) {
-      logger.d("open DataBase");
-      getDataFromDataBase(database).then((value) {
-        tasksList = value;
-        logger.d(value.toString());
-      });
-    });
-  }
 
-  Future insertTask({
-    required String title,
-    required String date,
-    required String time,
-  }) async {
-    await database.transaction((txn) {
-      return txn
-          .rawInsert(
-              'INSERT INTO loll(title, date, time, status) VALUES("$title", "$date", "$time", "new") ')
-          .then((value) {
-        logger.d("$value inset Done ");
-      }).catchError((onError) {
-        logger.e("error when insert ${onError.toString()}");
-      });
-    });
-  }
 
-  Future getDataFromDataBase(database) async {
-    return await database.rawQuery('SELECT * FROM loll');
-  }
 }
 
 
